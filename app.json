@@ -19,6 +19,14 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.fluentpet.petmanager"
-    }
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you upload pictures."
+        }
+      ]
+    ]
   }
 }

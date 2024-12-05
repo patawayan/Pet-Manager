@@ -1,9 +1,12 @@
-export type Pet = {
+export const SEARCH_FILTERS = ["name", "age", "description"];
+
+export type SearchFilters = (typeof SEARCH_FILTERS)[number];
+
+type SearchPetbase = Partial<Record<SearchFilters, string>>;
+
+export type Pet = SearchPetbase & {
   id: string;
-  name: string;
-  age: string;
   image?: string;
-  description?: string;
 };
 
 export type RootStackParamList = {

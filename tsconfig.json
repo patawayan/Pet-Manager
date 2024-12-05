@@ -13,6 +13,7 @@
     "inlineSources": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "strictPropertyInitialization": true
+    "strictPropertyInitialization": true,
+    "jsx": "react-native"
   }
 }

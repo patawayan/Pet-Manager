@@ -1,100 +1,81 @@
-import React, { useState } from "react";
-import {
-  View,
-  TextInput,
-  TouchableOpacity,
-  Text,
-  StyleSheet,
-  FlatList,
-} from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { View, StyleSheet, FlatList } from "react-native";
 import { usePetContext } from "../context/PetContext";
 import { Pet } from "../types";
+import PetListItem from "../components/PetListItem";
+import SearchComponent from "../components/SearchComponent";
+import PetForm from "../components/PetForm";
 
+/**
+ * Main Pet List screen
+ */
 const MainScreen: React.FC = () => {
-  const { addPet, updatePet, deletePet, pets } = usePetContext();
+  const { deletePet, clearSuccess, clearErrors, pets, successMessage } =
+    usePetContext();
   const [name, setName] = useState("");
-  const [age, setAge] = useState("");
+  const [age, setAge] = useState<string>("");
   const [description, setDescription] = useState("");
-  const [editingPet, setEditingPet] = useState<unknown>(undefined);
+  const [image, setImage] = useState<string>("");
+  const [editingPet, setEditingPet] = useState<Pet>();
 
-  const handleSubmit = () => {
-    const petData: Pet = {
-      // @ts-ignore
-      id: editingPet?.id || Date.now().toString(),
-      name,
-      age,
-      description,
-    };
-
-    if (editingPet) {
-      updatePet(petData);
-    } else {
-      addPet(petData);
-    }
+  /**
+   * Clear form data
+   */
+  const clearForm = () => {
+    setName("");
+    setAge("");
+    setDescription("");
+    setImage("");
+    setEditingPet(undefined);
   };
 
-  const renderPetItem = ({ item }: { item: any }) => (
-    <View style={styles.petItem}>
-      <Text>Name: {item.name}</Text>
-      <Text>Age: {item.age}</Text>
-      {item.description && <Text>Description: {item.description}</Text>}
-
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          onPress={() => {
-            setEditingPet(item);
-            setName(item.name);
-            setAge(item.age);
-            setDescription(item.description || "");
-          }}
-          style={styles.editButton}
-        >
-          <Text>Edit</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => deletePet(item.id)}
-          style={styles.deleteButton}
-        >
-          <Text>Delete</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+  /**
+   * Wrap renderItem in a callback to prevent unecessary renders
+   */
+  const renderPetItem = useCallback(
+    ({ item }: { item: Pet }) => (
+      <PetListItem
+        pet={item}
+        onDelete={() => deletePet(item.id)}
+        onUpdate={() => {
+          clearSuccess();
+          clearErrors();
+          setEditingPet(item);
+          setName(item.name ?? "");
+          setAge(item.age ?? "");
+          setDescription(item.description || "");
+          setImage(item.image || "");
+        }}
+      />
+    ),
+    [deletePet, setEditingPet, setName, setAge, setDescription, clearErrors]
   );
+
+  useEffect(() => {
+    if (successMessage && successMessage.length) {
+      clearForm();
+    }
+  }, [successMessage]);
 
   return (
     <View style={styles.container}>
-      <View style={styles.formContainer}>
-        <TextInput
-          style={styles.input}
-          value={name}
-          onChangeText={setName}
-          placeholder="Pet Name"
-        />
-        <TextInput
-          style={styles.input}
-          value={age}
-          onChangeText={setAge}
-          placeholder="Pet Age"
-          keyboardType="numeric"
-        />
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          value={description}
-          onChangeText={setDescription}
-          placeholder="Pet Description"
-          multiline
-          numberOfLines={4}
-        />
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>
-            {editingPet ? "Update Pet" : "Add Pet"}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <PetForm
+        age={age}
+        name={name}
+        description={description}
+        image={image}
+        clearForm={clearForm}
+        setAge={setAge}
+        setDescription={setDescription}
+        setEditingPet={setEditingPet}
+        setImage={setImage}
+        setName={setName}
+        editingPet={editingPet}
+      />
 
       <View style={styles.listContainer}>
         <FlatList
+          ListHeaderComponent={<SearchComponent />}
           data={pets}
           keyExtractor={(item) => item.id}
           renderItem={renderPetItem}
@@ -108,56 +89,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    marginTop: 50,
-  },
-  formContainer: {
-    padding: 16,
-    marginTop: 16,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 8,
-    marginBottom: 16,
-    borderRadius: 5,
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: "top",
-  },
-  button: {
-    backgroundColor: "#4CAF50",
-    padding: 16,
-    borderRadius: 5,
-  },
-  buttonText: {
-    color: "white",
-    textAlign: "center",
   },
   listContainer: {
     flex: 1,
     marginTop: 16,
-  },
-  petItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    marginTop: 8,
-  },
-  editButton: {
-    backgroundColor: "#2196F3",
-    padding: 8,
-    borderRadius: 5,
-    marginRight: 8,
-  },
-  deleteButton: {
-    backgroundColor: "#f44336",
-    padding: 8,
-    borderRadius: 5,
   },
 });
 
